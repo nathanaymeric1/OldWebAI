@@ -1,0 +1,341 @@
+* {
+  box-sizing: border-box;
+}
+
+:root {
+  --bg: #d8d8d8;
+  --panel: #eeeeee;
+  --white: #ffffff;
+  --dark: #222222;
+  --mid: #777777;
+  --border: #555555;
+  --link: #0000ee;
+  --accent: #000080;
+  --green: #006600;
+  --error: #990000;
+}
+
+html {
+  font-family: Verdana, Arial, sans-serif;
+  font-size: 14px;
+  background: var(--bg);
+  color: var(--dark);
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0.025) 0,
+      rgba(0, 0, 0, 0.025) 1px,
+      transparent 1px,
+      transparent 3px
+    ),
+    var(--bg);
+}
+
+button,
+textarea,
+input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.shell {
+  width: min(980px, calc(100% - 24px));
+  margin: 18px auto;
+  background: var(--panel);
+  border: 2px solid var(--border);
+  box-shadow: 5px 5px 0 #999;
+}
+
+.masthead {
+  min-height: 76px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  color: var(--white);
+  background: var(--accent);
+  border-bottom: 4px solid #000;
+}
+
+.logo {
+  font-family: "Courier New", monospace;
+  font-size: 32px;
+  font-weight: 900;
+  letter-spacing: -2px;
+}
+
+.logo span {
+  color: #ffff00;
+}
+
+.tagline {
+  margin: 2px 0 0;
+  font-size: 11px;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  min-height: 610px;
+}
+
+.sidebar {
+  padding: 12px;
+  border-right: 2px solid var(--border);
+  background: #ddd;
+}
+
+.sidebar-title {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+  font-weight: bold;
+  border-bottom: 1px solid #999;
+}
+
+.history-item {
+  width: 100%;
+  padding: 8px;
+  margin: 0 0 7px;
+  text-align: left;
+  color: var(--link);
+  background: #f8f8f8;
+  border: 1px solid #aaa;
+}
+
+.history-item:hover {
+  background: #ffffcc;
+}
+
+.history-item strong,
+.history-item span {
+  display: block;
+}
+
+.history-item strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.history-item span {
+  margin-top: 4px;
+  color: #666;
+  font-size: 10px;
+}
+
+.content {
+  padding: 18px;
+}
+
+.intro {
+  padding-bottom: 12px;
+  border-bottom: 2px solid #999;
+}
+
+.intro h1 {
+  margin: 0 0 4px;
+  font-family: Georgia, serif;
+  font-size: 28px;
+}
+
+.intro p {
+  margin: 0;
+}
+
+.conversation {
+  min-height: 250px;
+  padding: 14px 0;
+}
+
+.empty-state {
+  padding: 55px 20px;
+  text-align: center;
+  color: #777;
+}
+
+.pixel-face {
+  display: inline-block;
+  margin-bottom: 8px;
+  padding: 6px 10px;
+  font-family: "Courier New", monospace;
+  font-weight: bold;
+  border: 1px solid #888;
+  background: #fff;
+}
+
+.message {
+  margin-bottom: 14px;
+  border: 1px solid #777;
+  background: #fff;
+}
+
+.message-head {
+  padding: 5px 8px;
+  color: #fff;
+  font-size: 11px;
+  font-weight: bold;
+  background: #444;
+}
+
+.message.user .message-head {
+  background: #666;
+}
+
+.message.assistant .message-head {
+  background: var(--green);
+}
+
+.message-body {
+  padding: 12px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+}
+
+.model-label {
+  float: right;
+  font-weight: normal;
+}
+
+.prompt-box {
+  padding: 12px;
+  background: #ddd;
+  border: 2px inset #eee;
+}
+
+.prompt-box > label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+textarea {
+  display: block;
+  width: 100%;
+  resize: vertical;
+  padding: 9px;
+  border: 2px inset #eee;
+  background: #fff;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-top: 10px;
+}
+
+.temperature {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.temperature input {
+  width: 170px;
+}
+
+.temperature output {
+  min-width: 34px;
+  padding: 2px 5px;
+  text-align: center;
+  background: #fff;
+  border: 1px solid #999;
+  font-family: "Courier New", monospace;
+}
+
+.button {
+  padding: 7px 18px;
+  color: #fff;
+  background: #000080;
+  border: 2px outset #aaa;
+  font-weight: bold;
+}
+
+.button:active {
+  border-style: inset;
+}
+
+.button:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+.button-small {
+  padding: 5px 10px;
+}
+
+.text-button {
+  padding: 0;
+  color: var(--link);
+  border: 0;
+  background: transparent;
+  text-decoration: underline;
+}
+
+.muted {
+  color: #777;
+  font-size: 12px;
+}
+
+.fine-print {
+  margin: 9px 0 0;
+  color: #666;
+  font-size: 10px;
+}
+
+.error {
+  color: var(--error);
+}
+
+footer {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px;
+  border-top: 2px solid #555;
+  color: #555;
+  font-size: 10px;
+}
+
+@media (max-width: 700px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    display: none;
+    border-right: 0;
+    border-bottom: 2px solid var(--border);
+  }
+
+  .sidebar.is-open {
+    display: block;
+  }
+
+  .controls {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .temperature {
+    justify-content: space-between;
+  }
+
+  .temperature input {
+    flex: 1;
+  }
+}

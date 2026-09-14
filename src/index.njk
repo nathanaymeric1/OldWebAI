@@ -1,0 +1,85 @@
+---
+layout: layout.njk
+title: OldWeb AI
+---
+
+<div class="shell">
+  <header class="masthead">
+    <div>
+      <div class="logo">OldWeb<span>AI</span></div>
+      <p class="tagline">A tiny prompt machine. No React required.</p>
+    </div>
+    <button class="button button-small" id="history-toggle" type="button">
+      History
+    </button>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" id="history-panel" aria-label="Prompt history">
+      <div class="sidebar-title">
+        <span>Prompt history</span>
+        <button class="text-button" id="clear-history" type="button">Clear</button>
+      </div>
+      <div id="history-list" class="history-list">
+        <p class="muted">No prompts yet.</p>
+      </div>
+    </aside>
+
+    <main class="content">
+      <section class="intro">
+        <h1>Ask the machine</h1>
+        <p>Send a prompt through your own tiny server to OpenRouter.</p>
+      </section>
+
+      <section id="conversation" class="conversation" aria-live="polite">
+        <div class="empty-state">
+          <div class="pixel-face">:-)</div>
+          <p>Your answer will appear here.</p>
+        </div>
+      </section>
+
+      <form id="prompt-form" class="prompt-box">
+        <label for="prompt">Prompt</label>
+        <textarea
+          id="prompt"
+          name="prompt"
+          rows="5"
+          placeholder="Ask something..."
+          required
+        ></textarea>
+
+        <div class="controls">
+          <label class="temperature">
+            <span>Temperature</span>
+            <input
+              id="temperature"
+              type="range"
+              min="0"
+              max="2"
+              step="0.1"
+              value="0.7"
+            />
+            <output id="temperature-value">0.7</output>
+          </label>
+
+          <button class="button" id="send-button" type="submit">
+            Send prompt
+          </button>
+        </div>
+
+        <p class="fine-print">
+          Your API key stays on the server. Prompt history is stored locally
+          in this browser.
+        </p>
+      </form>
+    </main>
+  </div>
+
+  <footer>
+    <span>Powered by OpenRouter</span>
+    <span>•</span>
+    <span>Built with Eleventy</span>
+  </footer>
+</div>
+
+<script type="module" src="/js/app.js"></script>

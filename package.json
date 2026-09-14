@@ -1,0 +1,13 @@
+{
+  "name": "eleventy-openrouter-chat",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "eleventy",
+    "dev:watch": "eleventy --watch",
+    "start": "node --env-file=.env server.js"
+  },
+  "devDependencies": {
+    "@11ty/eleventy": "^3.1.2"
+  }
+}
