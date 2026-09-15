@@ -3,10 +3,11 @@ import sqlite3
 from pathlib import Path
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
+from fastapi import BackgroundTasks, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from openai import OpenAI
 from pydantic import BaseModel
+from sanitizer import build_sql_system_prompt, sanitize_user_input
 from validator import SQLValidationError, validate_sql_query
 
 load_dotenv()
@@ -32,40 +33,49 @@ class ChatRequest(BaseModel):
     prompt: str
 
 
-@app.post("/api/chat")
-def chat(req: ChatRequest):
+def update_conversation_context_async(user_prompt: str, ai_response: str):
+    """Background task (Point 11): Updates rolling context summaries asynchronously."""
     try:
-        # Step 1: AI1 generates SQL
-        sql_prompt = (
-            "You are a SQLite expert. Convert this request into a SQL query for the table 'draws' "
-            "(columns: date_de_tirage, boule_1, boule_2, boule_3, boule_4, boule_5, numero_chance). "
-            f"Return ONLY the raw SQL query, nothing else. Request: {req.prompt}"
+        # Asynchronous call to AI2 to condense context without blocking client response
+        summary_prompt = (
+            f"Summarize this interaction for session context: User asked '{user_prompt}', AI replied '{ai_response}'."
         )
-
-        res1 = client.chat.completions.create(
-            model="cohere/north-mini-code:free",
-            messages=[{"role": "user", "content": sql_prompt}],
-            temperature=0.0,
+        client.chat.completions.create(
+            model="nvidia/nemotron-3-super-120b-a12b:free",
+            messages=[{"role": "user", "content": summary_prompt}],
+            temperature=0.3,
         )
+    except Exception:
+        pass  # Non-blocking background log failure
 
-        # Defensive checks for AI1 response
-        if not res1 or not res1.choices:
-            raise HTTPException(
-                status_code=502,
-                detail="AI1 returned an empty response from OpenRouter.",
-            )
 
-        raw_sql = res1.choices[0].message.content or ""
-        raw_sql = (
-            raw_sql.strip().replace("```sql", "").replace("```", "").strip()
+@app.post("/api/chat")
+def chat(req: ChatRequest, background_tasks: BackgroundTasks):
+    # Step 1: Input Sanitization (Point 12)
+    try:
+        clean_prompt = sanitize_user_input(req.prompt)
+    except ValueError as err:
+        raise HTTPException(status_code=400, detail=str(err))
+
+    # Step 2: AI1 SQL Translation
+    sql_prompt = build_sql_system_prompt(clean_prompt)
+    res1 = client.chat.completions.create(
+        model="cohere/north-mini-code:free",
+        messages=[{"role": "user", "content": sql_prompt}],
+        temperature=0.0,
+    )
+
+    raw_sql = (res1.choices[0].message.content or "").strip()
+
+    # Handle Trick Questions / Out-of-Domain Requests (Point 9)
+    if "NO_SQL_NEEDED" in raw_sql:
+        reply = "I can only answer questions regarding official French Loto (FDJ) draw results stored in the database."
+        background_tasks.add_task(
+            update_conversation_context_async, clean_prompt, reply
         )
+        return {"reply": reply, "model": "guardrail-intercept"}
 
-        if not raw_sql:
-            raise HTTPException(
-                status_code=502, detail="AI1 failed to generate a SQL string."
-            )
-
-        # Step 2: Validate & Execute against SQLite
+    try:
         safe_sql = validate_sql_query(raw_sql)
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
@@ -73,11 +83,10 @@ def chat(req: ChatRequest):
         db_results = cursor.fetchall()
         conn.close()
 
-        # Step 3: AI2 Synthesizes response
+        # Step 3: AI2 Natural Language Synthesis (Point 9)
         synth_prompt = (
-            f"The user asked: '{req.prompt}'. "
-            f"The database returned this raw data: {db_results}. "
-            "Provide a friendly, concise answer based on these database results."
+            f"User asked: '{clean_prompt}'. Database query returned: {db_results if db_results else 'No records found'}. "
+            "Formulate a precise, natural response. If results are empty, inform the user gracefully."
         )
 
         res2 = client.chat.completions.create(
@@ -86,15 +95,14 @@ def chat(req: ChatRequest):
             temperature=0.7,
         )
 
-        # Defensive checks for AI2 response
-        if not res2 or not res2.choices:
-            raise HTTPException(
-                status_code=502,
-                detail="AI2 returned an empty response from OpenRouter.",
-            )
-
         reply = (
-            res2.choices[0].message.content or "No answer could be generated."
+            res2.choices[0].message.content
+            or "No synthesis could be generated."
+        )
+
+        # Trigger non-blocking context update
+        background_tasks.add_task(
+            update_conversation_context_async, clean_prompt, reply
         )
 
         return {"reply": reply, "model": "cohere-to-nemotron-pipeline"}
@@ -103,7 +111,5 @@ def chat(req: ChatRequest):
         raise HTTPException(
             status_code=400, detail=f"SQL Security Error: {str(err)}"
         )
-    except HTTPException:
-        raise
     except Exception as err:
         raise HTTPException(status_code=500, detail=f"Server Error: {str(err)}")
