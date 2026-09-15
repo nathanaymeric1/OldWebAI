@@ -6,14 +6,10 @@ import { fileURLToPath } from "node:url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const siteRoot = path.join(__dirname, "_site");
 const port = Number(process.env.PORT || 3000);
-const apiKey = process.env.OPENROUTER_API_KEY;
 const model = process.env.OPENROUTER_MODEL || "openrouter/free";
 const siteUrl = process.env.SITE_URL || `http://localhost:${port}`;
 const siteName = process.env.SITE_NAME || "OldWeb AI";
 
-if (!apiKey) {
-  console.warn("Warning: OPENROUTER_API_KEY is not set.");
-}
 
 const server = http.createServer(async (req, res) => {
   try {
@@ -33,11 +29,6 @@ server.listen(port, () => {
 });
 
 async function handleChat(req, res) {
-  if (!apiKey) {
-    return sendJson(res, 500, {
-      error: "OPENROUTER_API_KEY is not configured on the server."
-    });
-  }
 
   const body = await readJson(req);
   const prompt = typeof body.prompt === "string" ? body.prompt.trim() : "";
