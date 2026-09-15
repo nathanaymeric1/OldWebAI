@@ -1,27 +1,21 @@
 const form = document.querySelector("#prompt-form");
 const promptInput = document.querySelector("#prompt");
-const temperatureInput = document.querySelector("#temperature");
-const temperatureValue = document.querySelector("#temperature-value");
 const conversation = document.querySelector("#conversation");
 const historyList = document.querySelector("#history-list");
 const historyPanel = document.querySelector("#history-panel");
-const historyToggle = document.querySelector("#history-toggle");
 const clearHistory = document.querySelector("#clear-history");
+const historyToggle = document.querySelector("#history-toggle");
 const sendButton = document.querySelector("#send-button");
 
-const STORAGE_KEY = "oldweb-ai-history-v1";
+const STORAGE_KEY = "fdj-chat-history-v1";
 
 let history = loadHistory();
 
-temperatureInput.addEventListener("input", () => {
-  temperatureValue.value = Number(temperatureInput.value).toFixed(1);
-});
-
-historyToggle.addEventListener("click", () => {
+historyToggle?.addEventListener("click", () => {
   historyPanel.classList.toggle("is-open");
 });
 
-clearHistory.addEventListener("click", () => {
+clearHistory?.addEventListener("click", () => {
   history = [];
   saveHistory();
   renderHistory();
@@ -37,19 +31,16 @@ form.addEventListener("submit", async (event) => {
   renderConversation(prompt, "Thinking...", "pending");
 
   try {
-    const response = await fetch("/api/chat", {
+    const response = await fetch("http://127.0.0.1:8000/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        prompt,
-        temperature: Number(temperatureInput.value)
-      })
+      body: JSON.stringify({ prompt })
     });
 
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.error || "The server rejected the request.");
+      throw new Error(data.detail || "The server rejected the request.");
     }
 
     renderConversation(prompt, data.reply, "assistant", data.model);
@@ -59,7 +50,6 @@ form.addEventListener("submit", async (event) => {
       prompt,
       reply: data.reply,
       model: data.model,
-      temperature: Number(temperatureInput.value),
       createdAt: new Date().toISOString()
     });
 
@@ -104,6 +94,7 @@ function renderConversation(prompt, reply, kind, model = "") {
 }
 
 function renderHistory() {
+  if (!historyList) return;
   historyList.innerHTML = "";
 
   if (!history.length) {
@@ -128,9 +119,7 @@ function renderHistory() {
     button.addEventListener("click", () => {
       renderConversation(item.prompt, item.reply, "assistant", item.model);
       promptInput.value = item.prompt;
-      temperatureInput.value = item.temperature ?? 0.7;
-      temperatureValue.value = Number(temperatureInput.value).toFixed(1);
-      historyPanel.classList.remove("is-open");
+      historyPanel?.classList.remove("is-open");
       promptInput.focus();
     });
 
