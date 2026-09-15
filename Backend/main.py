@@ -1,7 +1,8 @@
 import sqlite3
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from validator import SQLValidationError, validate_sql_query
 
 app = FastAPI()
 
@@ -19,16 +20,25 @@ class ChatRequest(BaseModel):
 
 @app.post("/api/chat")
 def chat(req: ChatRequest):
-    # Hardcoded test query to verify pipeline end-to-end
-    conn = sqlite3.connect("fdj_draws.db")
-    cursor = conn.cursor()
-    cursor.execute(
-        "SELECT date_de_tirage, boule_1, boule_2, boule_3, boule_4, boule_5 FROM draws ORDER BY date_de_tirage DESC LIMIT 1"
-    )
-    row = cursor.fetchone()
-    conn.close()
+    # Simulated query to test validator integration
+    test_generated_sql = "DELETE FROM draws WHERE id = 1"
 
-    return {
-        "reply": f"Received prompt: '{req.prompt}'. Latest draw date: {row[0]}, Numbers: {row[1:]}",
-        "model": "system-test",
-    }
+    try:
+        # Run security check
+        safe_sql = validate_sql_query(test_generated_sql)
+
+        # Execute safe query
+        conn = sqlite3.connect("fdj_draws.db")
+        cursor = conn.cursor()
+        cursor.execute(safe_sql)
+        rows = cursor.fetchall()
+        conn.close()
+
+        return {
+            "reply": f"Query: `{safe_sql}`\nResults: {rows}",
+            "model": "security-harness-active",
+        }
+    except SQLValidationError as err:
+        raise HTTPException(
+            status_code=400, detail=f"SQL Security Error: {str(err)}"
+        )
